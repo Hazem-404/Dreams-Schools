@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dreams Bus</title>
     
     <meta name="theme-color" content="#0a2342">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="application-name" content="Dreams Bus">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="logo.png">
 
-    <title>Dreams School Bus</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -22,275 +20,438 @@
                 extend: {
                     colors: {
                         brand: {
-                            primary: '#0a2342',
-                            secondary: '#044735',
+                            primary: '#0a2342',   // كحلي
+                            secondary: '#044735', // أخضر
                             accent: '#f3f4f6'
                         }
                     },
                     boxShadow: {
-                        'card': '0 2px 5px rgba(0,0,0,0.05)',
-                        'floating': '0 -4px 10px rgba(0,0,0,0.1)'
+                        'up': '0 -4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }
                 }
             }
         }
     </script>
-
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        /* تحسين شكل الكروت */
-        .student-card { transition: transform 0.1s, background-color 0.2s; touch-action: manipulation; }
-        .student-card:active { transform: scale(0.98); }
-        .present-active { background-color: #dcfce7; border: 1px solid #22c55e; }
-        .absent-active { background-color: #ffffff; border: 1px solid #e5e7eb; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* Loading Spinner */
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #0a2342;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            animation: spin 0.8s linear infinite;
-        }
+        /* تأثيرات الانتقال بين التبويبات */
+        .tab-content { display: none; padding-bottom: 100px; animation: fadeIn 0.2s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* تنسيق زر الناف (Active State) */
+        .nav-item.active { color: #044735; font-weight: bold; }
+        .nav-item.active i { transform: scale(1.1); transition: transform 0.2s; }
+        
+        /* لودر التحميل */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #0a2342; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-50 pb-24 select-none"> <header class="bg-brand-primary text-white p-4 sticky top-0 z-40 shadow-md">
-        <div class="flex justify-between items-center mb-3">
-            <div class="flex items-center gap-3">
-                <img src="logo.png" alt="Dreams Logo" class="w-10 h-10 object-contain bg-white rounded-full p-0.5">
-                <div>
-                    <h1 class="text-lg font-bold leading-tight">Dreams School</h1>
-                    <p class="text-xs text-gray-300 font-mono" id="currentDate">--/--/----</p>
-                </div>
+<body class="bg-gray-50 select-none text-gray-800">
+
+    <header class="bg-brand-primary text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center h-16">
+        <div class="flex items-center gap-3">
+            <img src="logo.png" onerror="this.src='https://placehold.co/40'" class="w-8 h-8 rounded-full bg-white p-0.5">
+            <div>
+                <h1 class="text-lg font-bold leading-tight">Dreams School</h1>
+                <p class="text-[10px] text-gray-300 opacity-80">Bus Supervisor App</p>
             </div>
-            
-            <button onclick="toggleModal()" class="bg-brand-secondary/90 w-9 h-9 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition">
-                <i class="fas fa-plus text-sm"></i>
-            </button>
         </div>
-        
-        <div class="relative">
-            <input type="text" id="searchInput" placeholder="بحث باسم الطالب..." 
-                class="w-full py-2.5 px-4 pr-10 rounded-xl text-gray-800 bg-gray-100 border-none focus:ring-2 focus:ring-brand-secondary transition shadow-inner text-sm">
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-        </div>
+        <button onclick="toggleModal()" class="bg-white/10 w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 active:scale-90 transition">
+            <i class="fas fa-user-plus text-sm"></i>
+        </button>
     </header>
 
-    <main id="app" class="p-3 max-w-lg mx-auto min-h-screen">
-        
-        <div id="loading" class="flex flex-col items-center justify-center py-12">
-            <div class="loader mb-3"></div>
-            <p class="text-sm text-gray-500">جاري تحميل القائمة...</p>
-        </div>
-
-        <div id="studentList" class="space-y-3 hidden"></div>
-
-        <div id="noResults" class="hidden flex flex-col items-center justify-center py-10 text-gray-400">
-            <i class="fas fa-child text-4xl mb-2 opacity-50"></i>
-            <p class="text-sm">لا يوجد طالب بهذا الاسم</p>
-        </div>
-    </main>
-
-    <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 p-3 shadow-floating z-50 flex gap-3 max-w-lg left-0 right-0 mx-auto pb-6">
-        <button onclick="toggleSelectAll()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold text-sm active:bg-gray-200 transition flex items-center justify-center gap-2">
-            <i class="fas fa-check-double text-gray-500"></i> الكل
-        </button>
-        <button onclick="submitAttendance()" class="flex-[2] bg-brand-secondary text-white py-3 rounded-xl font-bold shadow-lg hover:bg-green-800 active:scale-95 transition flex items-center justify-center gap-2">
-            <i class="fas fa-save"></i> حفظ الحضور
-        </button>
+    <div id="loadingScreen" class="fixed inset-0 bg-white z-[40] flex flex-col items-center justify-center">
+        <div class="loader"></div>
+        <p class="text-sm text-gray-500">جاري الاتصال بقاعدة البيانات...</p>
     </div>
 
-    <div id="addStudentModal" class="fixed inset-0 bg-black/60 hidden z-[60] flex items-end sm:items-center justify-center backdrop-blur-sm transition-opacity">
-        <div class="bg-white w-full max-w-sm sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up">
-            <div class="bg-brand-primary p-4 text-white flex justify-between items-center">
-                <h3 class="font-bold">طالب جديد <i class="fas fa-user-plus mr-2 text-xs opacity-70"></i></h3>
-                <button onclick="toggleModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"><i class="fas fa-times"></i></button>
+    <div id="view-daily" class="tab-content active p-4">
+        
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-brand-primary">
+                <i class="far fa-calendar-alt"></i>
+                <span class="text-sm font-bold">تاريخ اليوم:</span>
+            </div>
+            <input type="date" id="attendanceDate" class="bg-gray-50 border border-gray-300 rounded-lg p-1.5 text-sm font-bold focus:ring-2 focus:ring-brand-secondary outline-none text-gray-700">
+        </div>
+
+        <div id="dailyList" class="space-y-3 min-h-[50vh]">
+            </div>
+
+        <div class="fixed bottom-20 left-4 right-4 flex gap-3 z-40 max-w-lg mx-auto">
+            <button onclick="toggleSelectAll()" class="bg-white text-gray-700 py-3.5 px-4 rounded-xl font-bold shadow-lg flex-1 border border-gray-200 active:bg-gray-50 text-sm">
+                <i class="fas fa-check-double text-gray-400 ml-1"></i> الكل
+            </button>
+            <button onclick="submitAttendance()" class="bg-brand-secondary text-white py-3.5 px-4 rounded-xl font-bold shadow-lg flex-[2] active:bg-green-900 active:scale-95 transition text-sm">
+                <i class="fas fa-save ml-2"></i> حفظ الحضور
+            </button>
+        </div>
+    </div>
+
+    <div id="view-history" class="tab-content p-4">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 px-1">سجل الأيام السابقة</h2>
+        
+        <div id="historyList" class="space-y-3">
+            </div>
+        
+        <div id="emptyHistory" class="hidden text-center py-10 text-gray-400">
+            <i class="fas fa-history text-4xl mb-3 opacity-30"></i>
+            <p class="text-sm">لا توجد سجلات سابقة</p>
+        </div>
+    </div>
+
+    <div id="view-students" class="tab-content p-4">
+        <div class="relative mb-5">
+            <input type="text" id="studentSearch" placeholder="ابحث باسم الطالب..." 
+                class="w-full p-3 pr-10 rounded-xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-brand-secondary outline-none text-sm bg-white">
+            <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+        </div>
+        
+        <div id="profilesList" class="space-y-3">
+            </div>
+    </div>
+
+    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-50 shadow-up max-w-lg left-0 right-0 mx-auto">
+        <button onclick="switchTab('view-daily')" class="nav-item active flex flex-col items-center justify-center w-full h-full text-gray-400">
+            <i class="fas fa-clipboard-check text-xl mb-1"></i>
+            <span class="text-[10px]">تسجيل</span>
+        </button>
+        <button onclick="switchTab('view-history')" class="nav-item flex flex-col items-center justify-center w-full h-full text-gray-400">
+            <i class="fas fa-history text-xl mb-1"></i>
+            <span class="text-[10px]">السجل</span>
+        </button>
+        <button onclick="switchTab('view-students')" class="nav-item flex flex-col items-center justify-center w-full h-full text-gray-400">
+            <i class="fas fa-users text-xl mb-1"></i>
+            <span class="text-[10px]">الطلاب</span>
+        </button>
+    </nav>
+
+    <div id="historyDetailModal" class="fixed inset-0 bg-black/60 hidden z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-full max-w-sm h-[85vh] sm:h-auto sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl animate-slide-up">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <div>
+                    <h3 class="font-bold text-brand-primary" id="historyModalTitle">--</h3>
+                    <p class="text-xs text-gray-500">تفاصيل الحضور والغياب</p>
+                </div>
+                <button onclick="closeHistoryModal()" class="w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300 flex items-center justify-center"><i class="fas fa-times text-gray-600"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1" id="historyModalContent">
+                </div>
+        </div>
+    </div>
+
+    <div id="addStudentModal" class="fixed inset-0 bg-black/60 hidden z-[70] flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm sm:rounded-2xl rounded-t-2xl shadow-2xl p-5 space-y-4 animate-slide-up">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-lg text-gray-800">إضافة طالب جديد</h3>
+                <button onclick="toggleModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
             </div>
             
-            <div class="p-5 space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">اسم الطالب</label>
-                    <input type="text" id="newInfoName" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary border outline-none transition" placeholder="الاسم ثلاثي">
-                </div>
-                
-                <div class="flex gap-3">
-                    <div class="flex-1">
-                        <label class="text-xs font-bold text-gray-500 uppercase">المرحلة</label>
-                        <select id="newInfoGrade" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 border outline-none h-11">
-    <option>KG 1</option>
-    <option>KG 2</option>
-    
-    <option>Grade 1</option>
-    <option>Grade 2</option>
-    <option>Grade 3</option>
-    <option>Grade 4</option>
-    <option>Grade 5</option>
-    <option>Grade 6</option>
-    
-    <option>Grade 7</option> <option>Grade 8</option> <option>Grade 9</option> 
-</select>
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-xs font-bold text-gray-500 uppercase">الباص</label>
-                        <input type="text" id="newInfoBus" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary border outline-none h-11" placeholder="مثال: A">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">هاتف الولي</label>
-                    <input type="tel" id="newInfoPhone" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary border outline-none" placeholder="01xxxxxxxxx">
-                </div>
-
-                <button onclick="saveNewStudent()" class="w-full bg-brand-secondary text-white font-bold py-3.5 rounded-xl hover:bg-green-800 active:scale-95 transition shadow-lg mt-2">
-                    حفظ وإضافة للقائمة
-                </button>
+            <input type="text" id="newInfoName" class="w-full border border-gray-300 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary outline-none" placeholder="اسم الطالب (ثلاثي)">
+            
+            <div class="flex gap-3">
+                <select id="newInfoGrade" class="flex-1 border border-gray-300 p-3 rounded-xl bg-gray-50 outline-none">
+                    <option>Grade 1</option><option>Grade 2</option><option>Grade 3</option>
+                    <option>Grade 4</option><option>Grade 5</option><option>Grade 6</option>
+                    <option>Grade 7</option><option>Grade 8</option><option>Grade 9</option>
+                </select>
+                <input type="text" id="newInfoBus" class="flex-1 border border-gray-300 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary outline-none" placeholder="رقم الباص">
             </div>
+
+            <input type="tel" id="newInfoPhone" class="w-full border border-gray-300 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary outline-none" placeholder="رقم ولي الأمر">
+
+            <button onclick="saveNewStudent()" class="w-full bg-brand-secondary text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-green-800 active:scale-95 transition">
+                حفظ وإضافة
+            </button>
         </div>
     </div>
 
     <script>
-        // ***************** الرابط الجديد *****************
-        const API_URL = "https://script.google.com/macros/s/AKfycbwAcZlqAAI1qcSsWoYpmKT-Mjy_EGlNEFt4TF-oCmvftcf_aJvwLnczh5IyGxl-DMoTIw/exec";
-        // *************************************************
+        // ***********************************************
+        // الرابط الجديد الذي أرسلته
+        const API_URL = "https://script.google.com/macros/s/AKfycbxF-D7QKEZwPM7Q-ZX1b58d9rhAv419FYwiREA8MS-rfreCEwuPclTag_54PemwmuAsUA/exec";
+        // ***********************************************
 
-        let studentsData = [];
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('currentDate').textContent = today;
+        let globalStudents = [];
+        let globalLogs = []; 
 
-        // 1. Fetch Data
+        // 1. عند فتح التطبيق
         window.onload = async function() {
+            // ضبط تاريخ اليوم تلقائياً
+            document.getElementById('attendanceDate').valueAsDate = new Date();
+            
             try {
-                const response = await fetch(API_URL);
-                const result = await response.json();
-                if(result.status === 'success') {
-                    studentsData = result.data.map(s => ({...s, status: 'Absent'}));
-                    renderStudents(studentsData);
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('studentList').classList.remove('hidden');
+                const res = await fetch(API_URL);
+                const json = await res.json();
+                
+                if(json.status === 'success') {
+                    // إضافة خاصية الحالة المحلية لكل طالب
+                    globalStudents = json.data.map(s => ({...s, currentStatus: 'Absent'})); 
+                    globalLogs = json.logs || [];
+                    
+                    // إخفاء اللودر وتشغيل الواجهة
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    
+                    // رسم الشاشات
+                    renderDailyList();
+                    renderHistoryList();
+                    renderProfilesList();
+                } else {
+                    alert("خطأ في البيانات: " + json.message);
                 }
-            } catch (error) {
-                alert("تعذر الاتصال بالسيرفر. تأكد من الإنترنت.");
-                console.error(error);
+            } catch(e) { 
+                alert("تعذر الاتصال بالسيرفر. تأكد من الإنترنت."); 
+                console.error(e);
             }
         };
 
-        // 2. Render Cards
-        function renderStudents(list) {
-            const container = document.getElementById('studentList');
+        // --- TAB 1: Daily Attendance Logic ---
+        function renderDailyList() {
+            const container = document.getElementById('dailyList');
             container.innerHTML = '';
-
-            if(list.length === 0) {
-                document.getElementById('noResults').classList.remove('hidden');
+            
+            if(globalStudents.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 py-10">لا يوجد طلاب مسجلين.</p>';
                 return;
-            } else {
-                document.getElementById('noResults').classList.add('hidden');
             }
 
-            list.forEach(student => {
-                const isPresent = student.status === 'Present';
-                // تصميم الكارت
-                const card = `
-                    <div onclick="toggleStatus('${student.id}')" 
-                         class="student-card cursor-pointer p-4 rounded-xl flex items-center justify-between shadow-card mb-2 ${isPresent ? 'present-active' : 'absent-active'}">
+            globalStudents.forEach(s => {
+                const isPresent = s.currentStatus === 'Present';
+                container.innerHTML += `
+                    <div onclick="toggleStatus('${s.id}')" 
+                         class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border transition-all cursor-pointer ${isPresent ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-100 hover:bg-gray-50'}">
                         
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isPresent ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-300'}">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${isPresent ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}">
                                 <i class="fas ${isPresent ? 'fa-check' : 'fa-user'}"></i>
                             </div>
-                            
                             <div>
-                                <h3 class="font-bold text-gray-800 text-base">${student.name}</h3>
-                                <div class="text-xs text-gray-500 flex items-center gap-2">
-                                    <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">${student.grade}</span>
-                                    <span class="flex items-center"><i class="fas fa-bus-alt text-[10px] ml-1"></i> ${student.busRoute}</span>
+                                <h4 class="font-bold text-gray-800 text-base">${s.name}</h4>
+                                <div class="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                    <span class="bg-white border px-1.5 rounded">${s.grade}</span>
+                                    <span><i class="fas fa-bus text-[10px] ml-1"></i> ${s.busRoute}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <a href="tel:${student.parentPhone}" onclick="event.stopPropagation()" 
-                           class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 active:scale-90 transition border border-blue-100">
+                        <a href="tel:${s.parentPhone}" onclick="event.stopPropagation()" 
+                           class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center active:scale-90 transition">
                             <i class="fas fa-phone text-sm"></i>
                         </a>
                     </div>
                 `;
-                container.innerHTML += card;
             });
         }
 
-        // 3. Toggle Status (Click on Card)
-        window.toggleStatus = function(id) {
-            const student = studentsData.find(s => s.id === id);
-            if(student) {
-                student.status = (student.status === 'Present') ? 'Absent' : 'Present';
-                // إعادة رسم ذكية (تحديث الكلاسات فقط أفضل، لكن لإعادة الرسم السريع مع البحث):
-                const searchTerm = document.getElementById('searchInput').value;
-                const filtered = studentsData.filter(s => s.name.includes(searchTerm));
-                renderStudents(filtered);
+        function toggleStatus(id) {
+            const s = globalStudents.find(x => x.id === id);
+            if(s) {
+                s.currentStatus = s.currentStatus === 'Present' ? 'Absent' : 'Present';
+                renderDailyList(); // إعادة رسم لتحديث الألوان
             }
         }
 
-        // 4. Search
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const term = e.target.value;
-            const filtered = studentsData.filter(s => s.name.includes(term));
-            renderStudents(filtered);
-        });
-
-        // 5. Select All
-        window.toggleSelectAll = function() {
-            const allPresent = studentsData.every(s => s.status === 'Present');
-            const newStatus = allPresent ? 'Absent' : 'Present';
-            studentsData.forEach(s => s.status = newStatus);
-            // تحديث العرض حسب البحث الحالي
-            const searchTerm = document.getElementById('searchInput').value;
-            renderStudents(studentsData.filter(s => s.name.includes(searchTerm)));
+        function toggleSelectAll() {
+            const allPresent = globalStudents.every(s => s.currentStatus === 'Present');
+            const newState = allPresent ? 'Absent' : 'Present';
+            globalStudents.forEach(s => s.currentStatus = newState);
+            renderDailyList();
         }
 
-        // 6. Submit Attendance
-        window.submitAttendance = async function() {
-            const btn = document.querySelector('button[onclick="submitAttendance()"]');
-            const icon = btn.querySelector('i');
-            
-            // Loading State
-            icon.className = "fas fa-spinner fa-spin";
-            btn.disabled = true;
-            btn.classList.add('opacity-80');
+        async function submitAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            if(!date) return alert("الرجاء اختيار التاريخ!");
 
-            // لاحظ: Action = attendance
+            // UI Loading
+            const btn = document.querySelector('button[onclick="submitAttendance()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...'; 
+            btn.disabled = true;
+
             const payload = {
                 action: "attendance",
-                records: studentsData.map(s => ({
-                    id: s.id, status: s.status, date: today
-                }))
+                records: globalStudents.map(s => ({ id: s.id, status: s.currentStatus, date: date }))
             };
 
             try {
-                await fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                    headers: { "Content-Type": "text/plain" }
+                await fetch(API_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify(payload), 
+                    headers: {"Content-Type": "text/plain"} 
                 });
-                alert("✅ تم حفظ الحضور!");
-            } catch (error) {
-                console.error(error);
+                
+                alert("✅ تم حفظ الحضور بنجاح!");
+                
+                // تحديث السجل المحلي فوراً (Optimistic UI Update)
+                // نحذف أي سجلات قديمة لنفس التاريخ ونضيف الجديد
+                globalLogs = globalLogs.filter(l => l.date !== date); 
+                payload.records.forEach(r => globalLogs.push({ date: r.date, studentId: r.id, status: r.status }));
+                
+                renderHistoryList(); // تحديث شاشة السجل
+                renderProfilesList(); // تحديث نسب الطلاب
+
+            } catch(e) {
+                // Apps Script Redirect Hack
                 alert("✅ تم الإرسال!");
+                console.log(e);
             } finally {
-                icon.className = "fas fa-save";
+                btn.innerHTML = originalText;
                 btn.disabled = false;
-                btn.classList.remove('opacity-80');
             }
         }
 
-        // 7. Modal Functions
-        window.toggleModal = function() {
-            const modal = document.getElementById('addStudentModal');
-            modal.classList.toggle('hidden');
+        // --- TAB 2: History Logic ---
+        function renderHistoryList() {
+            const container = document.getElementById('historyList');
+            const dates = [...new Set(globalLogs.map(l => l.date))].sort().reverse();
+            
+            container.innerHTML = '';
+            
+            if(dates.length === 0) {
+                document.getElementById('emptyHistory').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('emptyHistory').classList.add('hidden');
+            }
+
+            dates.forEach(date => {
+                // إحصائيات اليوم
+                const logsForDate = globalLogs.filter(l => l.date === date);
+                const presentCount = logsForDate.filter(l => l.status === 'Present').length;
+                const totalCount = logsForDate.length;
+                const percent = totalCount ? Math.round((presentCount/totalCount)*100) : 0;
+                
+                // تنسيق التاريخ للعرض
+                const dObj = new Date(date);
+                const dayName = dObj.toLocaleDateString('ar-EG', {weekday: 'long'});
+                const niceDate = dObj.toLocaleDateString('en-GB'); // DD/MM/YYYY
+
+                container.innerHTML += `
+                    <div onclick="openHistoryDetail('${date}')" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer active:bg-gray-50 mb-2">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-brand-primary text-white w-12 h-12 rounded-xl flex flex-col items-center justify-center shadow-lg">
+                                <span class="text-xs font-light">${date.split('-')[1]}</span>
+                                <span class="text-lg font-bold leading-none">${date.split('-')[2]}</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">${dayName} <span class="text-gray-400 font-normal text-xs">(${niceDate})</span></h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs text-gray-500"><i class="fas fa-check-circle text-green-600"></i> ${presentCount}</span>
+                                    <span class="text-xs text-gray-500"><i class="fas fa-times-circle text-red-500"></i> ${totalCount - presentCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-sm font-bold ${percent > 80 ? 'text-green-600' : 'text-orange-500'}">${percent}%</span>
+                            <i class="fas fa-chevron-left text-gray-300 text-xs"></i>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        // 8. Add Student
-        window.saveNewStudent = async function() {
+        function openHistoryDetail(date) {
+            document.getElementById('historyModalTitle').innerText = `تقرير يوم ${date}`;
+            const container = document.getElementById('historyModalContent');
+            container.innerHTML = '';
+
+            const logs = globalLogs.filter(l => l.date === date);
+            
+            logs.forEach(log => {
+                const student = globalStudents.find(s => s.id === log.studentId);
+                const name = student ? student.name : "طالب محذوف";
+                const isPresent = log.status === 'Present';
+                
+                container.innerHTML += `
+                    <div class="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full ${isPresent ? 'bg-green-500' : 'bg-red-500'}"></div>
+                            <span class="text-gray-800 text-sm font-medium">${name}</span>
+                        </div>
+                        <span class="px-2 py-1 rounded text-[10px] font-bold ${isPresent ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-700'}">
+                            ${isPresent ? 'حاضر' : 'غائب'}
+                        </span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('historyDetailModal').classList.remove('hidden');
+        }
+        function closeHistoryModal() { document.getElementById('historyDetailModal').classList.add('hidden'); }
+
+        // --- TAB 3: Student Profiles Logic ---
+        document.getElementById('studentSearch').addEventListener('input', (e) => {
+            renderProfilesList(e.target.value);
+        });
+
+        function renderProfilesList(filterText = '') {
+            const container = document.getElementById('profilesList');
+            container.innerHTML = '';
+            
+            const filtered = globalStudents.filter(s => s.name.includes(filterText));
+            
+            if(filtered.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 mt-10">لا يوجد نتائج</p>';
+                return;
+            }
+
+            filtered.forEach(s => {
+                // حسابات التقرير
+                const sLogs = globalLogs.filter(l => l.studentId === s.id);
+                const totalDays = sLogs.length;
+                const presentDays = sLogs.filter(l => l.status === 'Present').length;
+                const absentDays = totalDays - presentDays;
+                const percent = totalDays === 0 ? 0 : Math.round((presentDays / totalDays) * 100);
+
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-3 flex justify-between items-center">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-800 text-sm mb-1">${s.name}</h3>
+                            <div class="flex gap-2 text-[10px]">
+                                <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">${s.grade}</span>
+                                <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">${s.busRoute}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4">
+                            <div class="text-right text-[10px] text-gray-500">
+                                <div><span class="text-green-600 font-bold">${presentDays}</span> حضور</div>
+                                <div><span class="text-red-500 font-bold">${absentDays}</span> غياب</div>
+                            </div>
+                            
+                            <div class="relative w-12 h-12 flex items-center justify-center rounded-full border-4 ${percent > 85 ? 'border-green-500' : (percent > 60 ? 'border-yellow-400' : 'border-red-500')}">
+                                <span class="text-xs font-bold text-gray-700">${percent}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- Navigation Utilities ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Refresh specific lists to ensure data consistency
+            if(tabId === 'view-history') renderHistoryList();
+            if(tabId === 'view-students') renderProfilesList();
+        }
+
+        // --- Add Student Modal Functions ---
+        function toggleModal() { 
+            const m = document.getElementById('addStudentModal');
+            m.classList.toggle('hidden');
+        }
+
+        async function saveNewStudent() {
             const btn = document.querySelector('#addStudentModal button');
             const originalText = btn.innerHTML;
             
@@ -299,12 +460,11 @@
             const bus = document.getElementById('newInfoBus').value;
             const phone = document.getElementById('newInfoPhone').value;
 
-            if(!name) { alert("اكتب الاسم!"); return; }
+            if(!name) { alert("يرجى كتابة اسم الطالب"); return; }
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...';
             btn.disabled = true;
 
-            // لاحظ: Action = add_student
             const payload = {
                 action: "add_student",
                 data: { name, grade, bus, phone }
@@ -317,19 +477,23 @@
                     headers: { "Content-Type": "text/plain" }
                 });
                 const result = await response.json();
-                
+
                 if(result.status === 'success') {
-                    // إضافة الطالب محلياً
-                    studentsData.push({ ...result.newStudent, status: 'Absent' });
-                    renderStudents(studentsData);
+                    // إضافة الطالب للمصفوفة المحلية
+                    globalStudents.push({ ...result.newStudent, currentStatus: 'Absent' });
+                    
+                    alert("✅ تمت إضافة الطالب بنجاح!");
                     toggleModal();
-                    alert("تمت الإضافة!");
-                    // تفريغ الحقول
+                    
+                    // تنظيف الحقول
                     document.getElementById('newInfoName').value = '';
                     document.getElementById('newInfoPhone').value = '';
+                    
+                    renderDailyList(); // تحديث القائمة
                 }
             } catch (error) {
-                alert("تم إرسال الطلب، تحقق من الشيت.");
+                alert("تم إرسال الطلب (تحقق من الشيت).");
+                console.log(error);
                 toggleModal();
             } finally {
                 btn.innerHTML = originalText;
