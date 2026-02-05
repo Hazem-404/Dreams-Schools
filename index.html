@@ -2,652 +2,340 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Dreams School">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="theme-color" content="#0a2342">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="application-name" content="Dreams Bus">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="logo.png">
 
-<link rel="apple-touch-icon" href="logo.png">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>نظام إدارة مدارس دريمز - Dreams School</title>
+    <title>Dreams School Bus</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        dreamsBlue: { DEFAULT: '#0a2342', light: '#163a66' },
-                        dreamsGreen: { DEFAULT: '#044735', light: '#096b52' },
-                        dreamsGold: { DEFAULT: '#b45309', light: '#d97706' },
-                        dreamsRed: { DEFAULT: '#991b1b', light: '#b91c1c' }
+                        brand: {
+                            primary: '#0a2342',
+                            secondary: '#044735',
+                            accent: '#f3f4f6'
+                        }
+                    },
+                    boxShadow: {
+                        'card': '0 2px 5px rgba(0,0,0,0.05)',
+                        'floating': '0 -4px 10px rgba(0,0,0,0.1)'
                     }
                 }
             }
         }
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
-        .loader { border-top-color: #0a2342; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        /* تحسين شكل الكروت */
+        .student-card { transition: transform 0.1s, background-color 0.2s; touch-action: manipulation; }
+        .student-card:active { transform: scale(0.98); }
+        .present-active { background-color: #dcfce7; border: 1px solid #22c55e; }
+        .absent-active { background-color: #ffffff; border: 1px solid #e5e7eb; }
         
-        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .num-toggle-btn {
-            background: rgba(0,0,0,0.05);
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0a2342;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-right: 8px;
+            width: 25px;
+            height: 25px;
+            animation: spin 0.8s linear infinite;
         }
-        .num-toggle-btn:hover { background: rgba(0,0,0,0.1); color: #000; }
-
-        @media (max-width: 768px) {
-            .mobile-card {
-                background: white; margin-bottom: 1rem; border-radius: 1rem;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; padding: 1.25rem;
-            }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-gray-800">
-
-    <div id="welcome-modal" class="fixed inset-0 bg-dreamsBlue/95 z-50 flex items-center justify-center p-4 fade-in">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-lg text-center relative overflow-hidden w-full">
-            <div class="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-dreamsBlue via-dreamsGreen to-dreamsBlue"></div>
-            
-            <div class="mb-8 mt-2 flex justify-center">
-                <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center shadow-inner">
-                    <img src="logo.png" alt="Logo" class="w-16 h-16 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/167/167707.png'">
+<body class="bg-gray-50 pb-24 select-none"> <header class="bg-brand-primary text-white p-4 sticky top-0 z-40 shadow-md">
+        <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Dreams Logo" class="w-10 h-10 object-contain bg-white rounded-full p-0.5">
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">Dreams School</h1>
+                    <p class="text-xs text-gray-300 font-mono" id="currentDate">--/--/----</p>
                 </div>
             </div>
-
-            <h2 class="text-3xl font-extrabold text-dreamsBlue mb-2">السلام عليكم أ/ عبد الستار</h2>
-            <p class="text-gray-500 mb-8 text-lg font-medium">نورت نظام متابعة مدارس دريمز</p>
             
-            <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
-                <p class="text-gray-600 mb-2">تم تصميم وبرمجة هذا النظام خصيصاً لك</p>
-                <div class="flex items-center justify-center gap-2 text-dreamsBlue font-bold">
-                    <span>بكل فخر من ابنك</span>
-                    <span class="bg-blue-100 px-3 py-1 rounded-full text-sm">م/ حازم عبد الستار</span>
-                </div>
-            </div>
-
-            <button onclick="closeWelcome()" class="w-full bg-dreamsBlue text-white font-bold py-4 rounded-xl hover:bg-dreamsBlue-light transition shadow-lg text-lg transform hover:-translate-y-1 active:scale-95 duration-200">
-                بدء العمل
+            <button onclick="toggleModal()" class="bg-brand-secondary/90 w-9 h-9 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition">
+                <i class="fas fa-plus text-sm"></i>
             </button>
         </div>
+        
+        <div class="relative">
+            <input type="text" id="searchInput" placeholder="بحث باسم الطالب..." 
+                class="w-full py-2.5 px-4 pr-10 rounded-xl text-gray-800 bg-gray-100 border-none focus:ring-2 focus:ring-brand-secondary transition shadow-inner text-sm">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+    </header>
+
+    <main id="app" class="p-3 max-w-lg mx-auto min-h-screen">
+        
+        <div id="loading" class="flex flex-col items-center justify-center py-12">
+            <div class="loader mb-3"></div>
+            <p class="text-sm text-gray-500">جاري تحميل القائمة...</p>
+        </div>
+
+        <div id="studentList" class="space-y-3 hidden"></div>
+
+        <div id="noResults" class="hidden flex flex-col items-center justify-center py-10 text-gray-400">
+            <i class="fas fa-child text-4xl mb-2 opacity-50"></i>
+            <p class="text-sm">لا يوجد طالب بهذا الاسم</p>
+        </div>
+    </main>
+
+    <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 p-3 shadow-floating z-50 flex gap-3 max-w-lg left-0 right-0 mx-auto pb-6">
+        <button onclick="toggleSelectAll()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold text-sm active:bg-gray-200 transition flex items-center justify-center gap-2">
+            <i class="fas fa-check-double text-gray-500"></i> الكل
+        </button>
+        <button onclick="submitAttendance()" class="flex-[2] bg-brand-secondary text-white py-3 rounded-xl font-bold shadow-lg hover:bg-green-800 active:scale-95 transition flex items-center justify-center gap-2">
+            <i class="fas fa-save"></i> حفظ الحضور
+        </button>
     </div>
 
-    <nav class="bg-dreamsBlue text-white shadow-lg sticky top-0 z-30 backdrop-blur-md bg-opacity-95">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="bg-white p-1 rounded-full h-10 w-10 flex items-center justify-center overflow-hidden shadow">
-                    <img src="logo.png" alt="Logo" class="max-h-full max-w-full" onerror="this.style.display='none'">
-                </div>
-                <h1 class="text-lg md:text-2xl font-bold tracking-wide">مدارس دريمز Dreams School</h1>
+    <div id="addStudentModal" class="fixed inset-0 bg-black/60 hidden z-[60] flex items-end sm:items-center justify-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-full max-w-sm sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up">
+            <div class="bg-brand-primary p-4 text-white flex justify-between items-center">
+                <h3 class="font-bold">طالب جديد <i class="fas fa-user-plus mr-2 text-xs opacity-70"></i></h3>
+                <button onclick="toggleModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"><i class="fas fa-times"></i></button>
             </div>
-            <span id="update-time" class="text-xs font-mono bg-white/10 px-3 py-1 rounded-full hidden md:block border border-white/10">جاري التحديث...</span>
-        </div>
-    </nav>
-
-    <div class="container mx-auto px-4 py-8 pb-24">
-
-        <div id="loading" class="flex flex-col items-center justify-center py-20">
-            <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-20 w-20 mb-6"></div>
-            <p class="text-dreamsBlue font-bold text-xl animate-pulse">جاري جلب البيانات المالية...</p>
-        </div>
-
-        <div id="dashboard-content" class="hidden space-y-8">
-
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 rounded-2xl shadow-lg border-b-4 border-dreamsGold lg:col-span-1 transform transition hover:scale-[1.02]">
-                    <div class="flex justify-between items-start mb-4">
-                        <h2 class="text-dreamsGold font-bold text-sm flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
-                            قيمة الخصومات الممنوحة
-                        </h2>
-                        <span class="bg-dreamsGold/20 text-dreamsGold text-xs px-2 py-1 rounded-lg" id="special-count">0 طالب</span>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <p class="text-3xl font-bold tracking-tight" id="val-special" data-val="0">0</p>
-                        <button class="num-toggle-btn bg-white/10 text-white hover:bg-white/20" onclick="toggleNum('val-special')">👁️</button>
-                    </div>
-                    <p class="text-[10px] text-gray-400 mt-2">* هذه القيمة جزء من الإيراد المتوقع</p>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl shadow-md border-b-4 border-dreamsBlue lg:col-span-3">
-                    <h2 class="text-dreamsBlue font-bold text-lg mb-4 flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        الإيرادات الكلية المتوقعة (Gross Revenue)
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="border-l-4 border-blue-200 pl-4">
-                            <p class="text-gray-500 text-xs font-bold mb-1">دراسة (الكل)</p>
-                            <div class="flex items-center gap-2">
-                                <p class="text-2xl font-bold text-gray-800" id="val-exp-study" data-val="0">0</p>
-                                <button class="num-toggle-btn" onclick="toggleNum('val-exp-study')">👁️</button>
-                            </div>
-                        </div>
-                        <div class="border-l-4 border-teal-200 pl-4">
-                            <p class="text-gray-500 text-xs font-bold mb-1">باص (الكل)</p>
-                            <div class="flex items-center gap-2">
-                                <p class="text-2xl font-bold text-gray-800" id="val-exp-bus" data-val="0">0</p>
-                                <button class="num-toggle-btn" onclick="toggleNum('val-exp-bus')">👁️</button>
-                            </div>
-                        </div>
-                        <div class="border-l-4 border-dreamsBlue pl-4 bg-blue-50 rounded-r-lg">
-                            <p class="text-dreamsBlue text-xs font-bold mb-1">الإجمالي الكلي (شامل الخصومات)</p>
-                            <div class="flex items-center gap-2">
-                                <p class="text-3xl font-extrabold text-dreamsBlue" id="val-exp-total" data-val="0">0</p>
-                                <button class="num-toggle-btn" onclick="toggleNum('val-exp-total')">👁️</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-2xl shadow-md border-r-4 border-green-500 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-gray-500 text-sm font-bold mb-1">السيولة المحصلة (الخزينة)</h2>
-                        <div class="flex items-center gap-2">
-                            <p class="text-4xl font-bold text-green-600" id="val-collected" data-val="0">0</p>
-                            <button class="num-toggle-btn" onclick="toggleNum('val-collected')">👁️</button>
-                        </div>
-                    </div>
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl shadow-md border-r-4 border-red-500 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-gray-500 text-sm font-bold mb-1">المتبقي (لم يتم سداده)</h2>
-                        <div class="flex items-center gap-2">
-                            <p class="text-4xl font-bold text-red-600" id="val-debt" data-val="0">0</p>
-                            <button class="num-toggle-btn" onclick="toggleNum('val-debt')">👁️</button>
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-1">* صافي المديونية (تم استبعاد الخصومات نهائياً)</p>
-                    </div>
-                    <div class="bg-red-100 p-3 rounded-full">
-                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border-r-4 border-dreamsBlue flex items-center justify-between">
-                    <div>
-                        <h3 class="text-gray-500 font-bold text-sm">إجمالي عدد الطلاب</h3>
-                        <p class="text-3xl font-bold text-dreamsBlue mt-1" id="count-total">0</p>
-                    </div>
-                    <span class="text-2xl">👨‍🎓</span>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border-r-4 border-green-500 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-gray-500 font-bold text-sm">خالصي المصروفات</h3>
-                        <p class="text-3xl font-bold text-green-600 mt-1" id="count-paid">0</p>
-                    </div>
-                    <span class="text-2xl">✅</span>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border-r-4 border-red-500 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-gray-500 font-bold text-sm">عليهم مديونيات</h3>
-                        <p class="text-3xl font-bold text-red-600 mt-1" id="count-unpaid">0</p>
-                    </div>
-                    <span class="text-2xl">⚠️</span>
-                </div>
-             </div>
-
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div class="relative">
-                        <input type="text" id="search-input" placeholder="بحث سريع باسم الطالب..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-dreamsBlue focus:border-transparent outline-none transition">
-                        <span class="absolute left-3 top-3.5 text-gray-400 text-lg">🔍</span>
-                    </div>
-                    
-                    <div class="flex gap-2">
-                         <select id="branch-filter" class="w-1/2 p-3 border border-gray-300 rounded-xl bg-white focus:outline-none cursor-pointer hover:border-dreamsBlue transition text-sm">
-                            <option value="all">كل الفروع</option>
-                        </select>
-                        <select id="grade-filter" class="w-1/2 p-3 border border-gray-300 rounded-xl bg-white focus:outline-none cursor-pointer hover:border-dreamsBlue transition text-sm">
-                            <option value="all">كل المراحل</option>
-                        </select>
-                    </div>
-
-                    <button onclick="toggleSpecialFilter()" id="special-filter-btn" class="px-4 py-3 border border-dreamsGold text-dreamsGold rounded-xl font-bold hover:bg-dreamsGold hover:text-white transition whitespace-nowrap flex items-center justify-center gap-2 text-sm">
-                        <span>⭐</span> عرض الخصومات الخاصة
-                    </button>
-                    
-                    <button onclick="toggleUnpaidFilter()" id="unpaid-filter-btn" class="px-4 py-3 border border-red-500 text-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition whitespace-nowrap flex items-center justify-center gap-2 text-sm">
-                        <span>⚠️</span> عرض المتأخرات فقط
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="min-w-full leading-normal">
-                        <thead>
-                            <tr class="bg-dreamsBlue text-white text-sm">
-                                <th class="py-4 px-6 text-right font-semibold">الطالب</th>
-                                <th class="py-4 px-6 text-right font-semibold">المرحلة</th>
-                                <th class="py-4 px-6 text-center font-semibold">تاريخ المدفوعات</th>
-                                <th class="py-4 px-6 text-center font-bold">الموقف المالي</th>
-                                <th class="py-4 px-6 text-center font-semibold">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="text-gray-700 text-sm divide-y divide-gray-100"></tbody>
-                    </table>
-                </div>
-                <div id="mobile-container" class="md:hidden p-4 bg-gray-50 space-y-4"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="details-modal" class="fixed inset-0 bg-dreamsBlue/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300" id="modal-box">
-            <div class="bg-dreamsBlue text-white p-6 flex justify-between items-start">
+            
+            <div class="p-5 space-y-4">
                 <div>
-                    <span id="m-special-badge" class="hidden bg-dreamsGold text-white text-[10px] px-2 py-1 rounded-md font-bold mb-2 w-fit shadow-sm">⭐ خصم خاص شامل</span>
-                    <h3 class="text-2xl font-bold" id="m-name">اسم الطالب</h3>
+                    <label class="text-xs font-bold text-gray-500 uppercase">اسم الطالب</label>
+                    <input type="text" id="newInfoName" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary border outline-none transition" placeholder="الاسم ثلاثي">
                 </div>
-                <button onclick="closeModal()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition">&times;</button>
-            </div>
-            
-            <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <span class="block text-gray-500 text-xs mb-1">الفرع</span>
-                        <span class="font-bold text-dreamsBlue text-lg" id="m-branch">-</span>
+                
+                <div class="flex gap-3">
+                    <div class="flex-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">المرحلة</label>
+                        <select id="newInfoGrade" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 border outline-none h-11">
+    <option>KG 1</option>
+    <option>KG 2</option>
+    
+    <option>Grade 1</option>
+    <option>Grade 2</option>
+    <option>Grade 3</option>
+    <option>Grade 4</option>
+    <option>Grade 5</option>
+    <option>Grade 6</option>
+    
+    <option>Grade 7</option> <option>Grade 8</option> <option>Grade 9</option> 
+</select>
                     </div>
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <span class="block text-gray-500 text-xs mb-1">المرحلة</span>
-                        <span class="font-bold text-dreamsBlue text-lg" id="m-grade">-</span>
-                    </div>
-                </div>
-
-                <div class="border border-blue-100 rounded-xl p-5 relative bg-white shadow-sm">
-                    <span class="absolute -top-3 right-4 bg-blue-50 px-3 text-dreamsBlue font-bold text-sm border border-blue-100 rounded-full">مصاريف الدراسة</span>
-                    <div class="flex justify-between mb-3 border-b border-gray-100 pb-2">
-                        <span class="text-gray-500">القيمة المطلوبة:</span>
-                        <span class="font-bold text-lg" id="m-tuition-req">0</span>
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-700">
-                        <div class="bg-green-50 px-3 py-1 rounded text-green-700">ت1: <b id="m-p1">0</b></div>
-                        <div class="bg-green-50 px-3 py-1 rounded text-green-700">ت2: <b id="m-p2">0</b></div>
+                    <div class="flex-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">الباص</label>
+                        <input type="text" id="newInfoBus" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary border outline-none h-11" placeholder="مثال: A">
                     </div>
                 </div>
 
-                <div class="border border-teal-100 rounded-xl p-5 relative bg-white shadow-sm mt-2">
-                    <span class="absolute -top-3 right-4 bg-teal-50 px-3 text-dreamsGreen font-bold text-sm border border-teal-100 rounded-full">مصاريف الباص</span>
-                    <div class="flex justify-between mb-3 border-b border-gray-100 pb-2">
-                        <span class="text-gray-500">القيمة المطلوبة:</span>
-                        <span class="font-bold text-lg" id="m-bus-req">0</span>
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-700">
-                        <div class="bg-green-50 px-3 py-1 rounded text-green-700">ت1: <b id="m-bp1">0</b></div>
-                        <div class="bg-green-50 px-3 py-1 rounded text-green-700">ت2: <b id="m-bp2">0</b></div>
-                    </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">هاتف الولي</label>
+                    <input type="tel" id="newInfoPhone" class="w-full mt-1 border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-primary border outline-none" placeholder="01xxxxxxxxx">
                 </div>
 
-                <div class="bg-gray-50 p-5 rounded-xl flex justify-between items-center border border-gray-200">
-                    <span class="text-gray-800 font-bold">صافي المتبقي:</span>
-                    <span class="text-3xl font-extrabold text-red-600" id="m-total-rem">0</span>
-                </div>
-                <div id="m-special-note" class="text-sm bg-dreamsGold/10 text-dreamsGold border border-dreamsGold/20 p-3 rounded-lg text-center hidden font-semibold">
-                     هذا الطالب يندرج تحت بند الخصومات الخاصة. القيمة المتبقية تم إزالتها من إجمالي مديونيات المدرسة.
-                </div>
-            </div>
-            
-            <div class="bg-gray-50 p-4 border-t border-gray-100">
-                <button onclick="closeModal()" class="w-full bg-dreamsBlue text-white py-3 rounded-xl font-bold hover:bg-dreamsBlue-light transition shadow-md">إغلاق النافذة</button>
+                <button onclick="saveNewStudent()" class="w-full bg-brand-secondary text-white font-bold py-3.5 rounded-xl hover:bg-green-800 active:scale-95 transition shadow-lg mt-2">
+                    حفظ وإضافة للقائمة
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby_U01vYJsZTiKB6-XV-jo6s2Hcx7bhke9CP8zYSuqLfFeHHoFnIbhkL2-ZQa3e-zWh/exec";
-        
-        let allData = [];
-        let isSpecialFilter = false;
-        let isUnpaidFilter = false;
+        // ***************** الرابط الجديد *****************
+        const API_URL = "https://script.google.com/macros/s/AKfycbwAcZlqAAI1qcSsWoYpmKT-Mjy_EGlNEFt4TF-oCmvftcf_aJvwLnczh5IyGxl-DMoTIw/exec";
+        // *************************************************
 
-        // --- Helpers ---
-        const num = (v) => parseFloat(String(v).replace(/[^\d.-]/g, '')) || 0;
-        const money = (v) => new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(v);
-        
-        // Compact Number Format
-        function formatCompact(number) {
-            if (number >= 1000000) {
-                return (number / 1000000).toFixed(2) + ' مليون';
-            } else if (number >= 1000) {
-                return (number / 1000).toFixed(1) + ' ألف';
-            }
-            return new Intl.NumberFormat('ar-EG').format(number);
-        }
+        let studentsData = [];
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('currentDate').textContent = today;
 
-        // Toggle Format Logic
-        function toggleNum(elementId) {
-            const el = document.getElementById(elementId);
-            const rawVal = parseFloat(el.getAttribute('data-val'));
-            const currentText = el.innerText;
-            
-            if (currentText.includes('ج.م') || (currentText.includes(',') && !currentText.includes('مليون'))) {
-                el.innerText = formatCompact(rawVal);
-            } else {
-                el.innerText = money(rawVal);
-            }
-        }
-
-        // Check for Special/VIP
-        const isSpecial = (s) => s.discount && String(s.discount).toLowerCase().includes('vip');
-
-        function closeWelcome() {
-            document.getElementById('welcome-modal').style.display = 'none';
-        }
-
-        // --- Core Functions ---
-        async function init() {
+        // 1. Fetch Data
+        window.onload = async function() {
             try {
-                const res = await fetch(API_URL);
-                const data = await res.json();
-                allData = data;
-                
-                setupFilters();
-                calcAndRender();
-                
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('dashboard-content').classList.remove('hidden');
-                
-                const now = new Date();
-                document.getElementById('update-time').innerText = `تحديث: ${now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}`;
-            } catch (err) {
-                alert("تعذر الاتصال بقاعدة البيانات. تأكد من الإنترنت.");
+                const response = await fetch(API_URL);
+                const result = await response.json();
+                if(result.status === 'success') {
+                    studentsData = result.data.map(s => ({...s, status: 'Absent'}));
+                    renderStudents(studentsData);
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('studentList').classList.remove('hidden');
+                }
+            } catch (error) {
+                alert("تعذر الاتصال بالسيرفر. تأكد من الإنترنت.");
+                console.error(error);
             }
-        }
+        };
 
-        function setupFilters() {
-            const branches = [...new Set(allData.map(d => d.branch).filter(Boolean))];
-            const grades = [...new Set(allData.map(d => d.grade).filter(Boolean))];
-            
-            const bSelect = document.getElementById('branch-filter');
-            branches.forEach(b => bSelect.add(new Option(b, b)));
-            
-            const gSelect = document.getElementById('grade-filter');
-            grades.forEach(g => gSelect.add(new Option(g, g)));
-        }
-
-        // Update value with Default Compact Mode
-        function updateVal(id, value) {
-            const el = document.getElementById(id);
-            el.setAttribute('data-val', value);
-            el.innerText = formatCompact(value); 
-        }
-
-        function calcAndRender() {
-            const term = document.getElementById('search-input').value.toLowerCase();
-            const branchVal = document.getElementById('branch-filter').value;
-            const gradeVal = document.getElementById('grade-filter').value;
-
-            // Filter Logic
-            const filtered = allData.filter(s => {
-                const special = isSpecial(s);
-                const rem = num(s.totalRemaining);
-
-                const matchName = s.studentName && s.studentName.toLowerCase().includes(term);
-                const matchBranch = branchVal === 'all' || s.branch === branchVal;
-                const matchGrade = gradeVal === 'all' || s.grade === gradeVal;
-                
-                // Special Filter
-                let matchSpecial = true;
-                if(isSpecialFilter) matchSpecial = special;
-                
-                // Unpaid Filter
-                let matchUnpaid = true;
-                if(isUnpaidFilter) {
-                    matchUnpaid = (rem > 0 && !special);
-                }
-
-                return matchName && matchBranch && matchGrade && matchSpecial && matchUnpaid;
-            });
-
-            // Variables for calculations
-            let expStudy = 0, expBus = 0;
-            let collected = 0;
-            let debt = 0;
-            let specialVal = 0;
-            let specialCount = 0;
-
-            // Counter Variables
-            let countTotal = 0;
-            let countPaid = 0;
-            let countUnpaid = 0;
-
-            allData.forEach(s => {
-                const special = isSpecial(s);
-                const tuition = num(s.tuitionFees);
-                const bus = num(s.busFees);
-                const paid = num(s.paidTerm1) + num(s.paidTerm2) + num(s.busPaidTerm1) + num(s.busPaidTerm2);
-                const rem = num(s.totalRemaining); 
-
-                // Financials (Global)
-                expStudy += tuition;
-                expBus += bus;
-                collected += paid;
-
-                if (special) {
-                    specialVal += (tuition + bus);
-                    specialCount++;
-                } else {
-                    debt += rem;
-                }
-            });
-
-            // Counts logic based on FILTERED list to allow dynamic updates
-            filtered.forEach(s => {
-                const special = isSpecial(s);
-                const rem = num(s.totalRemaining);
-                
-                countTotal++;
-                
-                // Logic: 
-                // Unpaid = Regular student with remaining > 0
-                // Paid = Regular student with remaining <= 0 OR Special student (assumed cleared)
-                if (rem > 0 && !special) {
-                    countUnpaid++;
-                } else {
-                    countPaid++;
-                }
-            });
-
-            // Update UI Counters (Money)
-            updateVal('val-exp-study', expStudy);
-            updateVal('val-exp-bus', expBus);
-            updateVal('val-exp-total', expStudy + expBus);
-
-            updateVal('val-collected', collected);
-            updateVal('val-debt', debt);
-            
-            updateVal('val-special', specialVal);
-            document.getElementById('special-count').innerText = specialCount + " طالب";
-
-            // Update Student Statistics (New)
-            document.getElementById('count-total').innerText = countTotal;
-            document.getElementById('count-paid').innerText = countPaid;
-            document.getElementById('count-unpaid').innerText = countUnpaid;
-
-            renderList(filtered);
-        }
-
-        function renderList(list) {
-            const tbody = document.getElementById('table-body');
-            const mContainer = document.getElementById('mobile-container');
-            tbody.innerHTML = '';
-            mContainer.innerHTML = '';
+        // 2. Render Cards
+        function renderStudents(list) {
+            const container = document.getElementById('studentList');
+            container.innerHTML = '';
 
             if(list.length === 0) {
-                const empty = '<div class="text-center py-12 text-gray-400">لا توجد بيانات للعرض</div>';
-                tbody.innerHTML = `<tr><td colspan="5">${empty}</td></tr>`;
-                mContainer.innerHTML = empty;
+                document.getElementById('noResults').classList.remove('hidden');
                 return;
+            } else {
+                document.getElementById('noResults').classList.add('hidden');
             }
 
-            list.forEach(s => {
-                const idx = allData.indexOf(s);
-                const special = isSpecial(s);
-                const rem = num(s.totalRemaining);
-                
-                let statusHtml = '';
-                if(special) {
-                    statusHtml = '<span class="text-dreamsGold font-bold text-xs bg-orange-50 px-3 py-1 rounded-full border border-orange-100 shadow-sm">⭐ خصم خاص</span>';
-                } else if(rem > 0) {
-                    statusHtml = `<span class="text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full text-xs">${money(rem)}</span>`;
-                } else {
-                    statusHtml = `<span class="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-xs">خالص</span>`;
-                }
-
-                // Desktop Row
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition duration-150";
-                tr.innerHTML = `
-                    <td class="py-4 px-6 text-right font-bold text-dreamsBlue flex items-center gap-2">
-                        ${s.studentName} ${special ? '<span class="text-[10px] text-dreamsGold">⭐</span>' : ''}
-                    </td>
-                    <td class="py-4 px-6 text-right text-gray-600">
-                        ${s.grade} <span class="text-xs text-gray-400 mx-1">|</span> ${s.branch}
-                    </td>
-                    <td class="py-4 px-6 text-center text-xs text-gray-500">
-                        <div class="flex flex-col gap-1 items-center">
-                           <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded w-fit">د: ${s.paidTerm1}/${s.paidTerm2}</span>
-                           <span class="bg-teal-50 text-teal-700 px-2 py-0.5 rounded w-fit">ب: ${s.busPaidTerm1}/${s.busPaidTerm2}</span>
+            list.forEach(student => {
+                const isPresent = student.status === 'Present';
+                // تصميم الكارت
+                const card = `
+                    <div onclick="toggleStatus('${student.id}')" 
+                         class="student-card cursor-pointer p-4 rounded-xl flex items-center justify-between shadow-card mb-2 ${isPresent ? 'present-active' : 'absent-active'}">
+                        
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isPresent ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-300'}">
+                                <i class="fas ${isPresent ? 'fa-check' : 'fa-user'}"></i>
+                            </div>
+                            
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-base">${student.name}</h3>
+                                <div class="text-xs text-gray-500 flex items-center gap-2">
+                                    <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">${student.grade}</span>
+                                    <span class="flex items-center"><i class="fas fa-bus-alt text-[10px] ml-1"></i> ${student.busRoute}</span>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td class="py-4 px-6 text-center">
-                        ${statusHtml}
-                    </td>
-                    <td class="py-4 px-6 text-center">
-                        <button onclick="openModal(${idx})" class="text-dreamsBlue border border-dreamsBlue hover:bg-dreamsBlue hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">تفاصيل</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
 
-                // Mobile Card
-                const card = document.createElement('div');
-                card.className = `mobile-card ${special ? 'border-r-4 border-r-dreamsGold' : ''}`;
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <h4 class="font-bold text-dreamsBlue text-lg">${s.studentName}</h4>
-                            <p class="text-xs text-gray-500 mt-1">${s.branch} - ${s.grade}</p>
-                        </div>
-                        <div>${statusHtml}</div>
-                    </div>
-                    <div class="flex gap-2 mt-4">
-                        <button onclick="openModal(${idx})" class="flex-1 bg-gray-50 text-dreamsBlue py-2.5 rounded-xl text-sm font-bold border border-gray-200 shadow-sm active:bg-gray-200">عرض الملف الكامل</button>
+                        <a href="tel:${student.parentPhone}" onclick="event.stopPropagation()" 
+                           class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 active:scale-90 transition border border-blue-100">
+                            <i class="fas fa-phone text-sm"></i>
+                        </a>
                     </div>
                 `;
-                mContainer.appendChild(card);
+                container.innerHTML += card;
             });
         }
 
-        // --- Filter Events ---
-        document.getElementById('search-input').addEventListener('input', calcAndRender);
-        document.getElementById('branch-filter').addEventListener('change', calcAndRender);
-        document.getElementById('grade-filter').addEventListener('change', calcAndRender);
-        
-        function toggleSpecialFilter() {
-            if(isUnpaidFilter) toggleUnpaidFilter();
-            isSpecialFilter = !isSpecialFilter;
-            const btn = document.getElementById('special-filter-btn');
-            if(isSpecialFilter) {
-                btn.classList.add('bg-dreamsGold', 'text-white');
-                btn.innerHTML = "📋 عرض الكل";
-            } else {
-                btn.classList.remove('bg-dreamsGold', 'text-white');
-                btn.innerHTML = "⭐ عرض الخصومات الخاصة";
+        // 3. Toggle Status (Click on Card)
+        window.toggleStatus = function(id) {
+            const student = studentsData.find(s => s.id === id);
+            if(student) {
+                student.status = (student.status === 'Present') ? 'Absent' : 'Present';
+                // إعادة رسم ذكية (تحديث الكلاسات فقط أفضل، لكن لإعادة الرسم السريع مع البحث):
+                const searchTerm = document.getElementById('searchInput').value;
+                const filtered = studentsData.filter(s => s.name.includes(searchTerm));
+                renderStudents(filtered);
             }
-            calcAndRender();
         }
 
-        function toggleUnpaidFilter() {
-            if(isSpecialFilter) toggleSpecialFilter();
-            isUnpaidFilter = !isUnpaidFilter;
-            const btn = document.getElementById('unpaid-filter-btn');
-            if(isUnpaidFilter) {
-                btn.classList.add('bg-dreamsRed', 'text-white');
-                btn.innerHTML = "📋 عرض الكل";
-            } else {
-                btn.classList.remove('bg-dreamsRed', 'text-white');
-                btn.innerHTML = "⚠️ عرض المتأخرات فقط";
-            }
-            calcAndRender();
-        }
-
-        // --- Modal ---
-        const modal = document.getElementById('details-modal');
-        const modalBox = document.getElementById('modal-box');
-
-        function openModal(index) {
-            const s = allData[index];
-            const special = isSpecial(s);
-
-            document.getElementById('m-name').innerText = s.studentName;
-            document.getElementById('m-branch').innerText = s.branch;
-            document.getElementById('m-grade').innerText = s.grade;
-            
-            if(special) {
-                document.getElementById('m-special-badge').classList.remove('hidden');
-                document.getElementById('m-special-note').classList.remove('hidden');
-            } else {
-                document.getElementById('m-special-badge').classList.add('hidden');
-                document.getElementById('m-special-note').classList.add('hidden');
-            }
-
-            document.getElementById('m-tuition-req').innerText = money(num(s.tuitionFees));
-            document.getElementById('m-p1').innerText = num(s.paidTerm1);
-            document.getElementById('m-p2').innerText = num(s.paidTerm2);
-
-            document.getElementById('m-bus-req').innerText = money(num(s.busFees));
-            document.getElementById('m-bp1').innerText = num(s.busPaidTerm1);
-            document.getElementById('m-bp2').innerText = num(s.busPaidTerm2);
-
-            document.getElementById('m-total-rem').innerText = money(num(s.totalRemaining));
-
-            modal.classList.remove('hidden', 'opacity-0');
-            modalBox.classList.remove('scale-95');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal() {
-            modal.classList.add('opacity-0'); 
-            modalBox.classList.add('scale-95');
-            setTimeout(() => { 
-                modal.classList.add('hidden'); 
-                document.body.style.overflow = 'auto';
-            }, 300);
-        }
-
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModal();
+        // 4. Search
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value;
+            const filtered = studentsData.filter(s => s.name.includes(term));
+            renderStudents(filtered);
         });
 
-        init();
+        // 5. Select All
+        window.toggleSelectAll = function() {
+            const allPresent = studentsData.every(s => s.status === 'Present');
+            const newStatus = allPresent ? 'Absent' : 'Present';
+            studentsData.forEach(s => s.status = newStatus);
+            // تحديث العرض حسب البحث الحالي
+            const searchTerm = document.getElementById('searchInput').value;
+            renderStudents(studentsData.filter(s => s.name.includes(searchTerm)));
+        }
 
+        // 6. Submit Attendance
+        window.submitAttendance = async function() {
+            const btn = document.querySelector('button[onclick="submitAttendance()"]');
+            const icon = btn.querySelector('i');
+            
+            // Loading State
+            icon.className = "fas fa-spinner fa-spin";
+            btn.disabled = true;
+            btn.classList.add('opacity-80');
+
+            // لاحظ: Action = attendance
+            const payload = {
+                action: "attendance",
+                records: studentsData.map(s => ({
+                    id: s.id, status: s.status, date: today
+                }))
+            };
+
+            try {
+                await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                    headers: { "Content-Type": "text/plain" }
+                });
+                alert("✅ تم حفظ الحضور!");
+            } catch (error) {
+                console.error(error);
+                alert("✅ تم الإرسال!");
+            } finally {
+                icon.className = "fas fa-save";
+                btn.disabled = false;
+                btn.classList.remove('opacity-80');
+            }
+        }
+
+        // 7. Modal Functions
+        window.toggleModal = function() {
+            const modal = document.getElementById('addStudentModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // 8. Add Student
+        window.saveNewStudent = async function() {
+            const btn = document.querySelector('#addStudentModal button');
+            const originalText = btn.innerHTML;
+            
+            const name = document.getElementById('newInfoName').value;
+            const grade = document.getElementById('newInfoGrade').value;
+            const bus = document.getElementById('newInfoBus').value;
+            const phone = document.getElementById('newInfoPhone').value;
+
+            if(!name) { alert("اكتب الاسم!"); return; }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
+            btn.disabled = true;
+
+            // لاحظ: Action = add_student
+            const payload = {
+                action: "add_student",
+                data: { name, grade, bus, phone }
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                    headers: { "Content-Type": "text/plain" }
+                });
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    // إضافة الطالب محلياً
+                    studentsData.push({ ...result.newStudent, status: 'Absent' });
+                    renderStudents(studentsData);
+                    toggleModal();
+                    alert("تمت الإضافة!");
+                    // تفريغ الحقول
+                    document.getElementById('newInfoName').value = '';
+                    document.getElementById('newInfoPhone').value = '';
+                }
+            } catch (error) {
+                alert("تم إرسال الطلب، تحقق من الشيت.");
+                toggleModal();
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
